@@ -87,7 +87,7 @@ class MQTTSubscriber:
         self.play_music()
         
         # Load and display the video
-        video_path = "BoilingPotGUI\image.gif"  # Replace "video.mp4" with the path to your video file
+        video_path = "image.gif"  # Replace "video.mp4" with the path to your video file
         self.video = cv2.VideoCapture(video_path)
         self.success, self.frame = self.video.read()
         self.image_label = ttk.Label(self.master)
@@ -203,7 +203,7 @@ class MQTTSubscriber:
 
     def play_music(self):
         mixer.init()
-        mixer.music.load('BoilingPotGUI\chipi.mp3')  # Replace with the path to your music file
+        mixer.music.load('chipi.mp3')  # Replace with the path to your music file
         mixer.music.play(-1)  # -1 indicates infinite loop
 
     def stop_music(self):
