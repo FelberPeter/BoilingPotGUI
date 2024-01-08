@@ -12,7 +12,7 @@ class MQTTSubscriber:
         master.title("MQTT Subscriber")
 
         # Variables to store MQTT server address and port
-        self.server_address = tk.StringVar(value="localhost")
+        self.server_address = tk.StringVar(value="10.36.40.112")
         self.server_port = tk.IntVar(value=1883)
 
         # MQTT client setup
@@ -21,6 +21,14 @@ class MQTTSubscriber:
 
         # GUI setup
         self.setup_gui()
+
+        self.temperature_buffer = {}
+        # Circular buffer to store temperature values
+        self.temperature_buffer[0] = CircularBuffer(max_size=50)
+        self.temperature_buffer[1] = CircularBuffer(max_size=50)
+        self.temperature_buffer[2] = CircularBuffer(max_size=50)
+        self.temperature_buffer[3] = CircularBuffer(max_size=50)
+
 
     def setup_gui(self):
         # Entry for MQTT server address
@@ -43,6 +51,11 @@ class MQTTSubscriber:
 
         # Matplotlib plot
         self.fig, self.ax = plt.subplots()
+
+        # Set plot labels and legend
+        self.ax.set_xlabel("Sensor")
+        self.ax.set_ylabel("Temperature")
+
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
         self.canvas.get_tk_widget().grid(row=3, column=0, columnspan=3)
 
@@ -81,7 +94,12 @@ class MQTTSubscriber:
         try:
             # Decode JSON data from the received message payload
             data = json.loads(msg.payload.decode())
-            self.plot_temperatures(data)
+            print(data)
+
+            for i, (sensor, temperature) in enumerate(data.items()):
+                self.temperature_buffer[i].append(temperature)
+
+            self.plot_temperatures(self.temperature_buffer)
         except json.JSONDecodeError:
             print("Invalid JSON data")
 
@@ -90,22 +108,35 @@ class MQTTSubscriber:
         self.ax.clear()
 
         # Plot each sensor's temperature
-        for i, (sensor, temperature) in enumerate(data.items()):
-            self.ax.plot([i], [temperature], marker="o", label=sensor)
+        for sensor, buffer in data.items():
+            temperatures = buffer.get_values()
+            self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=f"sensor_{sensor}")
 
-        # Set plot labels and legend
-        self.ax.set_xlabel("Sensor")
-        self.ax.set_ylabel("Temperature")
         self.ax.legend()
 
         # Redraw the canvas
         self.canvas.draw()
+
 
     def play_music(self):
         mixer.init()
         mixer.music.load('BoilingPotGUI\chipi.mp3')  # Replace with the path to your music file
         mixer.music.play(-1)  # -1 indicates infinite loop
 
+
+class CircularBuffer:
+    def __init__(self, max_size):
+        self.max_size = max_size
+        self.buffer = []
+
+    def append(self, item):
+        self.buffer.append(item)
+        if len(self.buffer) > self.max_size:
+            self.buffer.pop(0)
+
+    def get_values(self):
+        return self.buffer
+    
 
 def main():
     root = tk.Tk()
