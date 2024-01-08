@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from pygame import mixer
 from collections import deque
+from PIL import Image, ImageTk
+import cv2
 
 #########################################################
 #####################   MQT   ###########################
@@ -82,6 +84,38 @@ class MQTTSubscriber:
 
         # Play music continuously
         self.play_music()
+        
+        # Load and display the video
+        video_path = "image.gif"  # Replace "video.mp4" with the path to your video file
+        self.video = cv2.VideoCapture(video_path)
+        self.success, self.frame = self.video.read()
+        self.image_label = ttk.Label(self.master)
+        self.image_label.grid(row=0, column=3, rowspan=4, padx=10, pady=10)
+        self.animate()
+        
+      
+
+    def animate(self):
+        if self.success:
+            image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+            self.photo = self.get_photo_image(image)
+            self.image_label.configure(image=self.photo)
+            self.image_label.image = self.photo
+
+        # Read the next frame
+        self.success, self.frame = self.video.read()
+
+        # Check if the video has reached the end
+        if not self.success:
+            # Reset the video to the beginning
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            self.success, self.frame = self.video.read()
+
+        # Schedule the next animation frame
+        self.master.after(30, self.animate)
+
+    def get_photo_image(self, image):
+        return ImageTk.PhotoImage(image=Image.fromarray(image))
 
     def update_port_entry(self):
         # Update the port entry to show the current scale value
@@ -200,7 +234,7 @@ def main():
     root = tk.Tk()
     app = MQTTSubscriber(root)
     # Set fixed window size
-    root.geometry("650x680")  # Change the values as needed
+    root.geometry("800x680")  # Change the values as needed
 
     # Disable window resizing
     root.resizable(False, False)
