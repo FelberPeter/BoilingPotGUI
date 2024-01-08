@@ -103,7 +103,7 @@ class MQTTSubscriber:
 
     def play_music(self):
         mixer.init()
-        mixer.music.load('chipi.mp3')  # Replace with the path to your music file
+        mixer.music.load('BoilingPotGUI\chipi.mp3')  # Replace with the path to your music file
         mixer.music.play(-1)  # -1 indicates infinite loop
 
 
