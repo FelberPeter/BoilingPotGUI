@@ -149,6 +149,7 @@ class MQTTSubscriber:
                 # Unsubscribe and disconnect only if connected
                 self.client.unsubscribe("fh-ece21")
                 self.client.disconnect()
+                self.client.loop_stop()  # Stop the MQTT loop
                 self.connected = False
                 self.update_connection_status(False)
         except Exception as e:
