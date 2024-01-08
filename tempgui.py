@@ -24,10 +24,10 @@ class MQTTSubscriber:
 
         self.temperature_buffer = {}
         # Circular buffer to store temperature values
+        self.temperature_buffer[0] = CircularBuffer(max_size=50)
         self.temperature_buffer[1] = CircularBuffer(max_size=50)
         self.temperature_buffer[2] = CircularBuffer(max_size=50)
         self.temperature_buffer[3] = CircularBuffer(max_size=50)
-        self.temperature_buffer[4] = CircularBuffer(max_size=50)
 
 
     def setup_gui(self):
@@ -96,8 +96,8 @@ class MQTTSubscriber:
             data = json.loads(msg.payload.decode())
             print(data)
 
-            for sensor, temperature in data.items():
-                self.temperature_buffer[sensor].append(temperature)
+            for i, (sensor, temperature) in enumerate(data.items()):
+                self.temperature_buffer[i].append(temperature)
 
             self.plot_temperatures(self.temperature_buffer)
         except json.JSONDecodeError:
