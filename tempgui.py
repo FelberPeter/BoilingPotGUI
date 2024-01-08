@@ -70,8 +70,9 @@ class MQTTSubscriber:
         self.fig, self.ax = plt.subplots()
 
         # Set plot labels and legend
-        self.ax.set_xlabel("Time")
+        self.ax.set_xlabel("Measurements")
         self.ax.set_ylabel("Temperature")
+        self.ax.set_ylim(0, 100)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
         self.canvas.get_tk_widget().grid(row=3, column=0, columnspan=3)
@@ -191,7 +192,11 @@ class MQTTSubscriber:
             temperatures = buffer.get_values()
             self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=sensor)
 
+        self.ax.set_xlabel("Measurements")
+        self.ax.set_ylabel("Temperature")
         self.ax.legend(loc='lower left')
+        # Set y-axis limits
+        self.ax.set_ylim(0, 100)
 
         # Redraw the canvas
         self.canvas.draw()
