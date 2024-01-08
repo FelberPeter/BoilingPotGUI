@@ -67,7 +67,7 @@ class MQTTSubscriber:
         # Set plot labels and legend
         self.ax.set_xlabel("Measurements")
         self.ax.set_ylabel("Temperature")
-        self.ax.set_ylim(0, 100)
+        self.ax.set_ylim(20, 90)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
         self.canvas.get_tk_widget().grid(row=3, column=0, columnspan=3)
@@ -196,7 +196,7 @@ class MQTTSubscriber:
         self.ax.set_ylabel("Temperature")
         self.ax.legend(loc='lower left')
         # Set y-axis limits
-        self.ax.set_ylim(0, 100)
+        self.ax.set_ylim(20, 90)
 
         # Redraw the canvas
         self.canvas.draw()
