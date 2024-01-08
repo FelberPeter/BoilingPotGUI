@@ -86,7 +86,7 @@ class MQTTSubscriber:
         self.play_music()
         
         # Load and display the video
-        video_path = "image.gif"  # Replace "video.mp4" with the path to your video file
+        video_path = "BoilingPotGUI\image.gif"  # Replace "video.mp4" with the path to your video file
         self.video = cv2.VideoCapture(video_path)
         self.success, self.frame = self.video.read()
         self.image_label = ttk.Label(self.master)
