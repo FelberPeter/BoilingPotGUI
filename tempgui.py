@@ -68,7 +68,7 @@ class MQTTSubscriber:
         self.fig, self.ax = plt.subplots()
 
         # Set plot labels and legend
-        self.ax.set_xlabel("Sensor")
+        self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Temperature")
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
@@ -140,9 +140,9 @@ class MQTTSubscriber:
             print(data)
 
             for i, (sensor, temperature) in enumerate(data.items()):
-                self.temperature_buffer[i].append(sensor)
                 self.temperature_buffer[i].append(temperature)
-
+                
+            print(self.temperature_buffer[0])
             self.plot_temperatures(self.temperature_buffer)
         except json.JSONDecodeError:
             print("Invalid JSON data")
@@ -152,7 +152,7 @@ class MQTTSubscriber:
         self.ax.clear()
 
         # Plot each sensor's temperature
-        for j ,(sensor, buffer) in data.items():
+        for sensor, buffer in data.items():
             temperatures = buffer.get_values()
             self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=sensor)
 
