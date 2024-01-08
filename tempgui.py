@@ -5,7 +5,11 @@ import json
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from pygame import mixer
+from collections import deque
 
+#########################################################
+#####################   MQT   ###########################
+#########################################################
 class MQTTSubscriber:
     def __init__(self, master):
         self.master = master
@@ -18,6 +22,10 @@ class MQTTSubscriber:
         # MQTT client setup
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
+        self.client.on_connect = self.on_connect
+
+        # Flag to track whether the client is connected
+        self.connected = False
 
         # GUI setup
         self.setup_gui()
@@ -28,7 +36,6 @@ class MQTTSubscriber:
         self.temperature_buffer[1] = CircularBuffer(max_size=50)
         self.temperature_buffer[2] = CircularBuffer(max_size=50)
         self.temperature_buffer[3] = CircularBuffer(max_size=50)
-
 
     def setup_gui(self):
         # Entry for MQTT server address
@@ -48,6 +55,14 @@ class MQTTSubscriber:
         # Button to connect to MQTT broker
         connect_button = ttk.Button(self.master, text="Connect", command=self.connect_to_broker)
         connect_button.grid(row=2, column=0, columnspan=3, pady=10)
+
+        # Connection status label
+        self.connection_status_label = ttk.Label(self.master, text="Disconnected!", foreground="red")
+        self.connection_status_label.grid(row=4, column=0, columnspan=3, pady=5)
+
+        # Disconnect button
+        disconnect_button = ttk.Button(self.master, text="Disconnect", command=self.disconnect_from_broker)
+        disconnect_button.grid(row=5, column=0, columnspan=3, pady=10)
 
         # Matplotlib plot
         self.fig, self.ax = plt.subplots()
@@ -84,11 +99,39 @@ class MQTTSubscriber:
             # Clear the plot
             self.ax.clear()
 
+            # Update connection status label
+            self.update_connection_status(True)
+            
             # Initial empty plot
             self.plot_temperatures({})
+
         except Exception as e:
             # Handle connection error
             tk.messagebox.showerror("Error", f"Failed to connect: {str(e)}")
+
+    def disconnect_from_broker(self):
+        try:
+            if self.connected:
+                # Unsubscribe and disconnect only if connected
+                self.client.unsubscribe("fh-ece21")
+                self.client.disconnect()
+                self.connected = False
+                self.update_connection_status(False)
+        except Exception as e:
+            tk.messagebox.showerror("Error", f"Failed to disconnect: {str(e)}")
+
+    def on_connect(self, client, userdata, flags, rc):
+        if rc == 0:
+            self.connected = True
+            self.update_connection_status(True)
+        else:
+            self.connected = False
+            self.update_connection_status(False)
+
+    def update_connection_status(self, connected):
+        status_text = "Connected!" if connected else "Disconnected!"
+        color = "green" if connected else "red"
+        self.connection_status_label.config(text=status_text, foreground=color)
 
     def on_message(self, client, userdata, msg):
         try:
@@ -97,6 +140,7 @@ class MQTTSubscriber:
             print(data)
 
             for i, (sensor, temperature) in enumerate(data.items()):
+                self.temperature_buffer[i].append(sensor)
                 self.temperature_buffer[i].append(temperature)
 
             self.plot_temperatures(self.temperature_buffer)
@@ -108,39 +152,60 @@ class MQTTSubscriber:
         self.ax.clear()
 
         # Plot each sensor's temperature
-        for sensor, buffer in data.items():
+        for j ,(sensor, buffer) in data.items():
             temperatures = buffer.get_values()
-            self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=f"sensor_{sensor}")
+            self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=sensor)
 
-        self.ax.legend()
+        self.ax.legend(loc='lower left')
 
         # Redraw the canvas
         self.canvas.draw()
-
 
     def play_music(self):
         mixer.init()
         mixer.music.load('BoilingPotGUI\chipi.mp3')  # Replace with the path to your music file
         mixer.music.play(-1)  # -1 indicates infinite loop
 
+    def stop_music(self):
+        mixer.music.stop()
 
+    def on_close(self):
+        # Stop music when closing the window
+        self.stop_music()
+        # Disconnect from the broker if connected
+        self.disconnect_from_broker()
+        # Close the window
+        self.master.destroy()
+
+
+
+#########################################################
+################   Circular Buffer   ####################
+#########################################################
 class CircularBuffer:
     def __init__(self, max_size):
-        self.max_size = max_size
-        self.buffer = []
+        self.buffer = deque(maxlen=max_size)
 
     def append(self, item):
         self.buffer.append(item)
-        if len(self.buffer) > self.max_size:
-            self.buffer.pop(0)
 
     def get_values(self):
         return self.buffer
     
 
+#########################################################
+######################   Main   #########################
+#########################################################
 def main():
     root = tk.Tk()
     app = MQTTSubscriber(root)
+    # Set fixed window size
+    root.geometry("650x680")  # Change the values as needed
+
+    # Disable window resizing
+    root.resizable(False, False)
+    # Bind close event to on_close method
+    root.protocol("WM_DELETE_WINDOW", app.on_close) 
     root.mainloop()
 
 
