@@ -29,15 +29,10 @@ class MQTTSubscriber:
         # Flag to track whether the client is connected
         self.connected = False
 
+        self.temperature_buffer = {}
+
         # GUI setup
         self.setup_gui()
-
-        self.temperature_buffer = {}
-        # Circular buffer to store temperature values
-        self.temperature_buffer[0] = CircularBuffer(max_size=50)
-        self.temperature_buffer[1] = CircularBuffer(max_size=50)
-        self.temperature_buffer[2] = CircularBuffer(max_size=50)
-        self.temperature_buffer[3] = CircularBuffer(max_size=50)
 
     def setup_gui(self):
         # Entry for MQTT server address
@@ -137,7 +132,7 @@ class MQTTSubscriber:
             self.update_connection_status(True)
             
             # Initial empty plot
-            self.plot_temperatures({})
+            self.plot_temperatures({}, {"sensor_empty":"empty"})
 
         except Exception as e:
             # Handle connection error
@@ -172,24 +167,29 @@ class MQTTSubscriber:
         try:
             # Decode JSON data from the received message payload
             data = json.loads(msg.payload.decode())
-            print(data)
+
+
+            if not self.temperature_buffer:
+                # Initialize buffers based on the number of sensors in the first message
+                for i, sensor in enumerate(data.keys()):
+                    self.temperature_buffer[i] = CircularBuffer(max_size=50)
 
             for i, (sensor, temperature) in enumerate(data.items()):
                 self.temperature_buffer[i].append(temperature)
-                
-            print(self.temperature_buffer[0])
-            self.plot_temperatures(self.temperature_buffer)
+
+            self.plot_temperatures(self.temperature_buffer, list(data.keys()))
+
         except json.JSONDecodeError:
             print("Invalid JSON data")
 
-    def plot_temperatures(self, data):
+    def plot_temperatures(self, data, sensor_names):
         # Clear existing plot
         self.ax.clear()
 
         # Plot each sensor's temperature
-        for sensor, buffer in data.items():
+        for i, (sensor, buffer) in enumerate(data.items()):
             temperatures = buffer.get_values()
-            self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=sensor)
+            self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=sensor_names[i])
 
         self.ax.legend(loc='lower left')
 
