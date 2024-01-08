@@ -51,15 +51,15 @@ class MQTTSubscriber:
 
         # Button to connect to MQTT broker
         connect_button = ttk.Button(self.master, text="Connect", command=self.connect_to_broker)
-        connect_button.grid(row=2, column=0, columnspan=3, pady=10)
+        connect_button.grid(row=0, column=4, columnspan=1, pady=10)
 
         # Connection status label
         self.connection_status_label = ttk.Label(self.master, text="Disconnected!", foreground="red")
-        self.connection_status_label.grid(row=4, column=0, columnspan=3, pady=5)
+        self.connection_status_label.grid(row=2, column=4, columnspan=1, pady=1)
 
         # Disconnect button
         disconnect_button = ttk.Button(self.master, text="Disconnect", command=self.disconnect_from_broker)
-        disconnect_button.grid(row=5, column=0, columnspan=3, pady=10)
+        disconnect_button.grid(row=1, column=4, columnspan=1, pady=10)
 
         # Matplotlib plot
         self.fig, self.ax = plt.subplots()
@@ -70,7 +70,7 @@ class MQTTSubscriber:
         self.ax.set_ylim(20, 90)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
-        self.canvas.get_tk_widget().grid(row=3, column=0, columnspan=3)
+        self.canvas.get_tk_widget().grid(row=3, column=0, columnspan=6)
 
         # Set initial value in the port entry
         self.update_port_entry()
@@ -86,7 +86,7 @@ class MQTTSubscriber:
         self.video = cv2.VideoCapture(video_path)
         self.success, self.frame = self.video.read()
         self.image_label = ttk.Label(self.master)
-        self.image_label.grid(row=0, column=3, rowspan=4, padx=10, pady=10)
+        self.image_label.grid(row=0, column=5, rowspan=3, padx=10, pady=10)
         self.animate()
         
       
@@ -198,9 +198,40 @@ class MQTTSubscriber:
         # Set y-axis limits
         self.ax.set_ylim(20, 90)
 
+
+        # Calculate and display average temperatures in a table
+        avg_frame = ttk.Frame(self.master)
+        avg_frame.grid(row=3, column=3, rowspan=3, padx=10, pady=10)
+
+        avg_label = ttk.Label(avg_frame, text="Average Temperatures")
+        avg_label.grid(row=0, column=0, columnspan=2, pady=5)
+
+        # Add headers
+        ttk.Label(avg_frame, text="Sensor").grid(row=1, column=0)
+        ttk.Label(avg_frame, text="Average Temperature").grid(row=1, column=1)
+
+        # Calculate averages
+        averages = self.calculate_averages(data)
+
+        # Display averages in a table
+        for i, (sensor, avg_temp) in enumerate(averages.items()):
+            ttk.Label(avg_frame, text=sensor).grid(row=i + 2, column=0)
+            ttk.Label(avg_frame, text=f"{avg_temp:.2f} °C").grid(row=i + 2, column=1)
+
+
         # Redraw the canvas
         self.canvas.draw()
 
+
+    def calculate_averages(self, data):
+            averages = {}
+            for sensor, buffer in data.items():
+                temperatures = buffer.get_values()
+                if temperatures:
+                    avg_temp = sum(temperatures) / len(temperatures)
+                    averages[sensor] = avg_temp
+            return averages
+    
     def play_music(self):
         mixer.init()
         mixer.music.load('chipi.mp3')  # Replace with the path to your music file
@@ -240,10 +271,10 @@ def main():
     root = tk.Tk()
     app = MQTTSubscriber(root)
     # Set fixed window size
-    root.geometry("800x680")  # Change the values as needed
+    #root.geometry("800x680")  # Change the values as needed
 
     # Disable window resizing
-    root.resizable(False, False)
+    #root.resizable(False, False)
     # Bind close event to on_close method
     root.protocol("WM_DELETE_WINDOW", app.on_close) 
     root.mainloop()
