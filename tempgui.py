@@ -65,8 +65,9 @@ class MQTTSubscriber:
         self.fig, self.ax = plt.subplots()
 
         # Set plot labels and legend
-        self.ax.set_xlabel("Time")
+        self.ax.set_xlabel("Measurements")
         self.ax.set_ylabel("Temperature")
+        self.ax.set_ylim(0, 100)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
         self.canvas.get_tk_widget().grid(row=3, column=0, columnspan=3)
@@ -81,7 +82,7 @@ class MQTTSubscriber:
         self.play_music()
         
         # Load and display the video
-        video_path = "image.gif"  # Replace "video.mp4" with the path to your video file
+        video_path = "BoilingPotGUI\image.gif"  # Replace "video.mp4" with the path to your video file
         self.video = cv2.VideoCapture(video_path)
         self.success, self.frame = self.video.read()
         self.image_label = ttk.Label(self.master)
@@ -191,14 +192,18 @@ class MQTTSubscriber:
             temperatures = buffer.get_values()
             self.ax.plot(range(len(temperatures)), temperatures, marker="o", label=sensor_names[i])
 
+        self.ax.set_xlabel("Measurements")
+        self.ax.set_ylabel("Temperature")
         self.ax.legend(loc='lower left')
+        # Set y-axis limits
+        self.ax.set_ylim(0, 100)
 
         # Redraw the canvas
         self.canvas.draw()
 
     def play_music(self):
         mixer.init()
-        mixer.music.load('chipi.mp3')  # Replace with the path to your music file
+        mixer.music.load('BoilingPotGUI\chipi.mp3')  # Replace with the path to your music file
         mixer.music.play(-1)  # -1 indicates infinite loop
 
     def stop_music(self):
