@@ -202,7 +202,7 @@ class MQTTSubscriber:
         averages = self.calculate_averages(data)
 
         # Display averages as text
-        avg_text = "\n".join([f"{"Average Temperature of " + sensor_names[i]}: {avg_temp:.2f} °C" for sensor, avg_temp in averages.items()])
+        avg_text = "\n".join([f'{"Average Temperature of " + sensor_names[i]}: {avg_temp:.2f} °C' for sensor, avg_temp in averages.items()])        
         self.ax.text(0.02, 0.98, avg_text, transform=self.ax.transAxes,
                     verticalalignment='top', horizontalalignment='left',
                     bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
